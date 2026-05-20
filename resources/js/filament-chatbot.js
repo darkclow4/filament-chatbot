@@ -57,12 +57,6 @@ function wireChatbotControls() {
         textarea.disabled = isProcessing
         typing.style.display = isProcessing && !streamingEnabled ? 'flex' : 'none'
         streamingMessage.style.display = isProcessing && streamingEnabled ? '' : 'none'
-
-        if (isProcessing) {
-            requestAnimationFrame(() => {
-                messages.scrollTop = messages.scrollHeight
-            })
-        }
     }
 
     let escapeHtml = (value) => String(value ?? '')
@@ -173,9 +167,6 @@ function wireChatbotControls() {
             }
 
             setProcessing(false)
-            requestAnimationFrame(() => {
-                messages.scrollTop = messages.scrollHeight
-            })
 
             return response
         }
@@ -189,9 +180,6 @@ function wireChatbotControls() {
             }
 
             setProcessing(false)
-            requestAnimationFrame(() => {
-                messages.scrollTop = messages.scrollHeight
-            })
 
             return response
         }
@@ -312,16 +300,6 @@ if (document.readyState === 'loading') {
 
 document.addEventListener('livewire:init', () => {
     bootFilamentChatbot()
-
-    Livewire.on('filament-chatbot-scroll', () => {
-        requestAnimationFrame(() => {
-            const container = document.getElementById('filament-chatbot-messages')
-
-            if (container) {
-                container.scrollTop = container.scrollHeight
-            }
-        })
-    })
 })
 
 document.addEventListener('livewire:navigated', bootFilamentChatbot)
