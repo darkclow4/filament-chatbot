@@ -3,7 +3,6 @@
 namespace Darkclow4\FilamentChatbot\Livewire;
 
 use Darkclow4\FilamentChatbot\ChatbotPlugin;
-use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Query\Builder;
@@ -102,8 +101,8 @@ class FloatingChatbot extends Component
     public function isEnabled(): bool
     {
         return ChatbotPlugin::isEnabledFor(
-            user: Filament::auth()->user(),
-            panel: Filament::getCurrentPanel(),
+            user: ChatbotPlugin::authUser(),
+            panel: ChatbotPlugin::currentPanel(),
         );
     }
 
@@ -245,7 +244,7 @@ class FloatingChatbot extends Component
 
     protected function getAuthenticatedUser(): Authenticatable
     {
-        $user = Filament::auth()->user();
+        $user = ChatbotPlugin::authUser();
 
         if (! $user instanceof Authenticatable) {
             throw new RuntimeException('A signed-in Filament user is required to use the chatbot.');
@@ -256,7 +255,7 @@ class FloatingChatbot extends Component
 
     protected function hasAuthenticatedUser(): bool
     {
-        return Filament::auth()->check() && Filament::auth()->user() instanceof Authenticatable;
+        return ChatbotPlugin::authUser() instanceof Authenticatable;
     }
 
     public function render()

@@ -36,8 +36,8 @@ class ChatbotPlugin implements Plugin
 
     public static function isEnabledFor(?Authenticatable $user = null, ?Panel $panel = null): bool
     {
-        $panel ??= Filament::getCurrentPanel();
-        $user ??= Filament::auth()->user();
+        $panel ??= static::currentPanel();
+        $user ??= static::authUser();
 
         $pluginEnabled = static::resolveCondition(static::$enabledUsing, $user, $panel);
         $configEnabled = static::resolveCondition(config('filament-chatbot.enabled', true), $user, $panel);
@@ -72,6 +72,28 @@ class ChatbotPlugin implements Plugin
         //
     }
 
+    public static function currentPanel(): ?Panel
+    {
+        if (method_exists(Filament::class, 'getCurrentPanel')) {
+            return Filament::getCurrentPanel();
+        }
+
+        return null;
+    }
+
+    public static function authUser(): ?Authenticatable
+    {
+        if (method_exists(Filament::class, 'auth')) {
+            $user = Filament::auth()->user();
+
+            return $user instanceof Authenticatable ? $user : null;
+        }
+
+        $user = auth()->user();
+
+        return $user instanceof Authenticatable ? $user : null;
+    }
+
     protected static function resolveCondition(bool|string|Closure|null $condition, ?Authenticatable $user, ?Panel $panel): ?bool
     {
         if ($condition === null) {
@@ -87,7 +109,7 @@ class ChatbotPlugin implements Plugin
         }
 
         if (class_exists($condition)) {
-            return (bool) app($condition)(user: $user, panel: $panel);
+            return (bool) app($condition)($user, $panel);
         }
 
         return (bool) Arr::get(config('filament-chatbot.conditions', []), $condition);

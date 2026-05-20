@@ -6,7 +6,7 @@ It mounts a global Livewire chat widget inside your Filament panel, stores conve
 
 ## Features
 
-- Built for Filament 5
+- Built for Filament 4 or newer
 - Powered by `laravel/ai`
 - Floating chatbot available across the Filament panel
 - Database-backed remembered conversations
@@ -15,10 +15,10 @@ It mounts a global Livewire chat widget inside your Filament panel, stores conve
 
 ## Requirements
 
-- PHP 8.3+
-- Laravel 13+
-- Filament 5
-- Livewire 4
+- PHP 8.3
+- Laravel 12 or newer
+- Filament 4 or newer
+- Livewire 3 or newer
 - `laravel/ai` configured with at least one working provider
 
 ## Installation
