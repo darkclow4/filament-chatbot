@@ -1,5 +1,6 @@
-@if ($this->isAvailable())
-    <div wire:key="filament-chatbot-floating" class="fi-chatbot">
+<div>
+    @if ($this->isAvailable())
+        <div wire:key="filament-chatbot-floating" class="fi-chatbot">
         <button type="button" data-chatbot-launcher class="fi-chatbot-launcher" aria-controls="filament-chatbot-panel"
             aria-expanded="false">
             <span class="fi-chatbot-launcher__icon" aria-hidden="true">
@@ -67,13 +68,8 @@
             <div class="fi-chatbot-form">
                 <textarea id="filament-chatbot-message" data-chatbot-textarea rows="3" class="fi-chatbot-form__textarea"
                     placeholder="{{ $this->placeholder() }}"></textarea>
-
-                <div class="fi-chatbot-form__footer">
-                    <button type="button" data-chatbot-send class="fi-chatbot-form__submit">
-                        {{ $this->sendButtonLabel() }}
-                    </button>
-                </div>
             </div>
         </div>
-    </div>
-@endif
+        </div>
+    @endif
+</div>

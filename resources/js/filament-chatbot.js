@@ -27,14 +27,13 @@ function wireChatbotControls() {
     const launcher = root.querySelector('[data-chatbot-launcher]')
     const closeButton = root.querySelector('[data-chatbot-close]')
     const newChatButton = root.querySelector('[data-chatbot-new-chat]')
-    const sendButton = root.querySelector('[data-chatbot-send]')
     const textarea = root.querySelector('[data-chatbot-textarea]')
     const panel = root.querySelector('[data-chatbot-panel]')
     const messages = root.querySelector('[data-chatbot-messages]')
     const messagesList = root.querySelector('[data-chatbot-messages-list]')
     const typing = root.querySelector('[data-chatbot-typing]')
 
-    if (! launcher || ! closeButton || ! newChatButton || ! sendButton || ! textarea || ! panel || ! messages || ! messagesList || ! typing) {
+    if (! launcher || ! closeButton || ! newChatButton || ! textarea || ! panel || ! messages || ! messagesList || ! typing) {
         return
     }
 
@@ -53,7 +52,6 @@ function wireChatbotControls() {
 
     let setProcessing = (isProcessing) => {
         textarea.disabled = isProcessing
-        sendButton.disabled = isProcessing
         typing.style.display = isProcessing ? 'flex' : 'none'
 
         if (isProcessing) {
@@ -138,7 +136,7 @@ function wireChatbotControls() {
         `
 
         meta.querySelector('.fi-chatbot-message__retry')?.addEventListener('click', async () => {
-            if (sendButton.disabled) {
+            if (textarea.disabled) {
                 return
             }
 
@@ -207,46 +205,22 @@ function wireChatbotControls() {
         setProcessing(false)
     }
 
-    launcher.addEventListener('click', () => {
+    launcher.onclick = () => {
         let isOpen = panel.style.display !== 'none'
 
         togglePanel(! isOpen)
-    })
+    }
 
-    closeButton.addEventListener('click', () => {
+    closeButton.onclick = () => {
         togglePanel(false)
-    })
+    }
 
-    newChatButton.addEventListener('click', async () => {
+    newChatButton.onclick = async () => {
         await callChatbot('startNewConversation')
         textarea.value = ''
-    })
+    }
 
-    sendButton.addEventListener('click', async () => {
-        if (sendButton.disabled) {
-            return
-        }
-
-        let prompt = textarea.value.trim()
-
-        if (! prompt.length) {
-            return
-        }
-
-        textarea.value = ''
-        let optimisticId = appendUserMessage(prompt)
-        requestAnimationFrame(() => {
-            messages.scrollTop = messages.scrollHeight
-        })
-
-        try {
-            await callChatbot('sendPrompt', [prompt])
-        } catch (error) {
-            markMessageFailed(optimisticId, prompt)
-        }
-    })
-
-    textarea.addEventListener('keydown', async (event) => {
+    textarea.onkeydown = async (event) => {
         if (textarea.disabled) {
             return
         }
@@ -274,7 +248,7 @@ function wireChatbotControls() {
         } catch (error) {
             markMessageFailed(optimisticId, prompt)
         }
-    })
+    }
 
     togglePanel(false)
     setProcessing(false)

@@ -117,8 +117,7 @@
 }
 
 .fi-chatbot-panel__action,
-.fi-chatbot-panel__close,
-.fi-chatbot-form__submit {
+.fi-chatbot-panel__close {
     border: 0;
     cursor: pointer;
 }
@@ -431,39 +430,6 @@
     color: #fcd34d;
 }
 
-.fi-chatbot-form__footer {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 0.75rem;
-}
-
-.fi-chatbot-form__hint {
-    margin: 0;
-    color: #64748b;
-    font-size: 0.74rem;
-    line-height: 1.5;
-}
-
-.dark .fi-chatbot-form__hint {
-    color: #94a3b8;
-}
-
-.fi-chatbot-form__submit {
-    border-radius: 999px;
-    background: #111827;
-    color: #f8fafc;
-    padding: 0.7rem 1rem;
-    font-size: 0.82rem;
-    font-weight: 700;
-}
-
-.dark .fi-chatbot-form__submit {
-    background: #f59e0b;
-    color: #111827;
-}
-
-.fi-chatbot-form__submit:disabled,
 .fi-chatbot-form__textarea:disabled {
     cursor: not-allowed;
     opacity: 0.7;
@@ -503,11 +469,6 @@
 
     .fi-chatbot-launcher__label {
         display: none;
-    }
-
-    .fi-chatbot-form__footer {
-        flex-direction: column;
-        align-items: stretch;
     }
 
     .fi-chatbot-message {

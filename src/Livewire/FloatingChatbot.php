@@ -2,6 +2,7 @@
 
 namespace Darkclow4\FilamentChatbot\Livewire;
 
+use Darkclow4\FilamentChatbot\ChatbotPlugin;
 use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
 use Illuminate\Contracts\Auth\Authenticatable;
@@ -100,7 +101,10 @@ class FloatingChatbot extends Component
 
     public function isEnabled(): bool
     {
-        return (bool) config('filament-chatbot.enabled', true);
+        return ChatbotPlugin::isEnabledFor(
+            user: Filament::auth()->user(),
+            panel: Filament::getCurrentPanel(),
+        );
     }
 
     public function isAvailable(): bool
