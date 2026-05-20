@@ -1,84 +1,20 @@
-let filamentChatbotKatexLoader = null
-
-function loadFilamentChatbotMathRenderer() {
-    if (window.renderMathInElement) {
-        return Promise.resolve()
-    }
-
-    if (filamentChatbotKatexLoader) {
-        return filamentChatbotKatexLoader
-    }
-
-    filamentChatbotKatexLoader = new Promise((resolve, reject) => {
-        let katexStylesheetId = 'filament-chatbot-katex-styles'
-        let katexScriptId = 'filament-chatbot-katex-script'
-        let katexAutoRenderScriptId = 'filament-chatbot-katex-auto-render-script'
-
-        if (! document.getElementById(katexStylesheetId)) {
-            let stylesheet = document.createElement('link')
-            stylesheet.id = katexStylesheetId
-            stylesheet.rel = 'stylesheet'
-            stylesheet.href = 'https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css'
-            document.head.appendChild(stylesheet)
-        }
-
-        let loadScript = (id, src, callback) => {
-            let existing = document.getElementById(id)
-
-            if (existing) {
-                if (existing.dataset.loaded === 'true') {
-                    callback()
-                } else {
-                    existing.addEventListener('load', callback, { once: true })
-                    existing.addEventListener('error', reject, { once: true })
-                }
-
-                return
-            }
-
-            let script = document.createElement('script')
-            script.id = id
-            script.src = src
-            script.defer = true
-            script.addEventListener('load', () => {
-                script.dataset.loaded = 'true'
-                callback()
-            }, { once: true })
-            script.addEventListener('error', reject, { once: true })
-            document.head.appendChild(script)
-        }
-
-        loadScript(katexScriptId, 'https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js', () => {
-            loadScript(katexAutoRenderScriptId, 'https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js', resolve)
-        })
-    })
-
-    return filamentChatbotKatexLoader
-}
+import renderMathInElement from 'katex/contrib/auto-render'
 
 function renderFilamentChatbotMath(element) {
     if (! element) {
         return
     }
 
-    loadFilamentChatbotMathRenderer()
-        .then(() => {
-            if (! window.renderMathInElement) {
-                return
-            }
-
-            window.renderMathInElement(element, {
-                delimiters: [
-                    { left: '$$', right: '$$', display: true },
-                    { left: '$', right: '$', display: false },
-                    { left: '\\(', right: '\\)', display: false },
-                    { left: '\\[', right: '\\]', display: true },
-                ],
-                throwOnError: false,
-                strict: 'ignore',
-            })
-        })
-        .catch(() => {})
+    renderMathInElement(element, {
+        delimiters: [
+            { left: '$$', right: '$$', display: true },
+            { left: '$', right: '$', display: false },
+            { left: '\\(', right: '\\)', display: false },
+            { left: '\\[', right: '\\]', display: true },
+        ],
+        throwOnError: false,
+        strict: 'ignore',
+    })
 }
 
 function wireChatbotControls() {

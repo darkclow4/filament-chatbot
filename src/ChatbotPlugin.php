@@ -25,8 +25,8 @@ class ChatbotPlugin implements Plugin
     {
         $panel
             ->assets([
-                Css::make('filament-chatbot-styles', __DIR__.'/../resources/css/filament-chatbot.css'),
-                Js::make('filament-chatbot-scripts', __DIR__.'/../resources/js/filament-chatbot.js'),
+                Css::make('filament-chatbot-styles', __DIR__.'/../resources/dist/filament-chatbot.min.css'),
+                Js::make('filament-chatbot-scripts', __DIR__.'/../resources/dist/filament-chatbot.min.js'),
             ])
             ->renderHook(
                 PanelsRenderHook::BODY_START,

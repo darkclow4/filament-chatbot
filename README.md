@@ -12,7 +12,6 @@ It mounts a global Livewire chat widget inside your Filament panel, stores conve
 - Database-backed remembered conversations
 - Configurable `agent` class via config
 - Optional provider and model overrides
-- Local package friendly for `/packages`
 
 ## Requirements
 
@@ -86,6 +85,8 @@ class AdminPanelProvider extends PanelProvider
 ```
 
 The chatbot is injected with a panel-scoped render hook, so it only appears on panels where the plugin is registered.
+
+The current plugin implementation mounts the floating chatbot through `PanelsRenderHook::BODY_START` and loads minified package assets via Filament's asset manager.
 
 ## Configuration
 
@@ -171,6 +172,21 @@ The chatbot stores conversation history in Laravel AI's database tables:
 - `agent_conversation_messages`
 
 Each signed-in Filament user gets their own remembered conversation context. The widget resumes the latest conversation for that user when possible.
+
+## Markdown And Math Rendering
+
+Assistant responses are rendered as HTML from Markdown.
+
+This means common Markdown features such as:
+
+- bold
+- italic
+- lists
+- inline code
+- code blocks
+- blockquotes
+
+will be formatted in the chat UI.
 
 ## Default Agent
 
