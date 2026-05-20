@@ -19,6 +19,8 @@ class ChatbotPlugin implements Plugin
 
     protected static bool|string|Closure|null $streamingUsing = null;
 
+    protected static string|Closure|null $primaryColorUsing = null;
+
     public static function make(): static
     {
         return app(static::class);
@@ -38,6 +40,13 @@ class ChatbotPlugin implements Plugin
         return $this;
     }
 
+    public function primaryColor(string|Closure|null $color = null): static
+    {
+        static::$primaryColorUsing = $color;
+
+        return $this;
+    }
+
     public static function clearEnabledConfiguration(): void
     {
         static::$enabledUsing = null;
@@ -48,19 +57,23 @@ class ChatbotPlugin implements Plugin
         static::$streamingUsing = null;
     }
 
+    public static function clearPrimaryColorConfiguration(): void
+    {
+        static::$primaryColorUsing = null;
+    }
+
     public static function isEnabledFor(?Authenticatable $user = null, ?Panel $panel = null): bool
     {
         $panel ??= static::currentPanel();
         $user ??= static::authUser();
 
         $pluginEnabled = static::resolveCondition(static::$enabledUsing, $user, $panel);
-        $configEnabled = static::resolveCondition(config('filament-chatbot.enabled', true), $user, $panel);
 
-        if ($pluginEnabled === false || $configEnabled === false) {
-            return false;
+        if ($pluginEnabled !== null) {
+            return $pluginEnabled;
         }
 
-        return ($pluginEnabled ?? true) && ($configEnabled ?? true);
+        return static::resolveCondition(config('filament-chatbot.enabled', true), $user, $panel) ?? true;
     }
 
     public static function isStreamingFor(?Authenticatable $user = null, ?Panel $panel = null): bool
@@ -69,13 +82,12 @@ class ChatbotPlugin implements Plugin
         $user ??= static::authUser();
 
         $pluginStreaming = static::resolveCondition(static::$streamingUsing, $user, $panel);
-        $configStreaming = static::resolveCondition(config('filament-chatbot.streaming', false), $user, $panel);
 
-        if ($pluginStreaming === false || $configStreaming === false) {
-            return false;
+        if ($pluginStreaming !== null) {
+            return $pluginStreaming;
         }
 
-        return ($pluginStreaming ?? false) && ($configStreaming ?? false);
+        return static::resolveCondition(config('filament-chatbot.streaming', false), $user, $panel) ?? false;
     }
 
     public function getId(): string
@@ -92,7 +104,10 @@ class ChatbotPlugin implements Plugin
             ])
             ->renderHook(
                 PanelsRenderHook::BODY_START,
-                fn (): string => Blade::render('<div id="filament-chatbot-root">@livewire(\'filament-chatbot\')</div>'),
+                fn (): string => Blade::render(
+                    '<div id="filament-chatbot-root" style="--filament-chatbot-primary: {{ $color }};">@livewire(\'filament-chatbot\')</div>',
+                    ['color' => static::primaryColorValue($panel)]
+                ),
             );
     }
 
@@ -142,5 +157,29 @@ class ChatbotPlugin implements Plugin
         }
 
         return (bool) Arr::get(config('filament-chatbot.conditions', []), $condition);
+    }
+
+    protected static function primaryColorValue(?Panel $panel = null): string
+    {
+        $panel ??= static::currentPanel();
+        $user = static::authUser();
+
+        $color = static::$primaryColorUsing;
+
+        if ($color instanceof Closure) {
+            $color = $color($user, $panel);
+        }
+
+        if (is_string($color) && $color !== '') {
+            return $color;
+        }
+
+        $configColor = config('filament-chatbot.primary_color');
+
+        if (is_string($configColor) && $configColor !== '') {
+            return $configColor;
+        }
+
+        return 'var(--primary-500, var(--color-primary-500, #f59e0b))';
     }
 }

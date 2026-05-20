@@ -1,8 +1,8 @@
 # Filament Chatbot
 
-`filament-chatbot` is a floating chatbot plugin for Filament 5 powered by `laravel/ai`.
+`filament-chatbot` is a floating chatbot plugin for Filament powered by `laravel/ai`.
 
-It mounts a global Livewire chat widget inside your Filament panel, stores conversation history using Laravel AI's conversation tables, and lets you choose which AI agent class should handle the conversation through configuration.
+It mounts a global Livewire chat widget inside your Filament panel, stores conversation history using Laravel AI's conversation tables, supports optional direct streaming without broadcast infrastructure, and lets you control behavior through both config and `ChatbotPlugin` APIs.
 
 ## Features
 
@@ -88,6 +88,57 @@ The chatbot is injected with a panel-scoped render hook, so it only appears on p
 
 The current plugin implementation mounts the floating chatbot through `PanelsRenderHook::BODY_START` and loads minified package assets via Filament's asset manager.
 
+## Plugin API
+
+The plugin exposes fluent methods so you can control visibility, streaming mode, and the chatbot accent color directly from your panel provider.
+
+```php
+use Darkclow4\FilamentChatbot\ChatbotPlugin;
+
+->plugin(
+    ChatbotPlugin::make()
+        ->enabled(fn ($user) => $user?->hasRole('admin') ?? false)
+        ->streaming(true)
+        ->primaryColor('#10b981')
+)
+```
+
+### `enabled()`
+
+Use `enabled()` to control whether the chatbot should be visible.
+
+Example, visible only to admins:
+
+```php
+ChatbotPlugin::make()
+    ->enabled(fn ($user) => $user?->hasRole('admin') ?? false)
+```
+
+### `streaming()`
+
+Use `streaming()` to enable direct AI streaming without Reverb / broadcast.
+
+```php
+ChatbotPlugin::make()
+    ->streaming(true)
+```
+
+### `primaryColor()`
+
+Use `primaryColor()` to override the chatbot accent color.
+
+Supported values:
+
+- hex string, for example `#10b981`
+- `Closure`
+
+If not provided, the chatbot falls back to the Filament panel primary color.
+
+```php
+ChatbotPlugin::make()
+    ->primaryColor('#10b981')
+```
+
 ## Configuration
 
 The published config file looks like this:
@@ -97,8 +148,9 @@ The published config file looks like this:
 
 return [
     'enabled' => true,
+    'streaming' => false,
     'title' => 'AI Assistant',
-    'description' => 'Ask anything about this admin panel.',
+    'description' => 'Ask anything about this app.',
     'placeholder' => 'Type your message...',
     'empty_state_heading' => 'Need a hand?',
     'empty_state_description' => 'Ask for help with data, workflow, or admin tasks.',
@@ -110,6 +162,15 @@ return [
     'max_messages' => 100,
 ];
 ```
+
+### Enabled And Streaming Precedence
+
+Plugin API values take priority over config values.
+
+Resolution order:
+
+1. use plugin API value if it has been configured
+2. otherwise fall back to config value
 
 ## Choosing The Agent
 
@@ -164,6 +225,20 @@ If you want to force a provider or model for the chatbot only, set these values:
 
 If either value is `null`, the package falls back to the agent / SDK defaults.
 
+## Streaming Mode
+
+By default, streaming is disabled.
+
+When enabled, the package uses direct streaming from Laravel AI and Livewire's streaming support to progressively render assistant output in the chat bubble.
+
+This mode does **not** require:
+
+- Reverb
+- websockets
+- broadcast channels
+
+It streams directly over the Livewire request/response cycle.
+
 ## Conversation Storage
 
 The chatbot stores conversation history in Laravel AI's database tables:
@@ -197,23 +272,6 @@ Darkclow4\FilamentChatbot\Ai\Agents\FilamentChatbotAgent::class
 ```
 
 This is useful for quick setup, but in a real application you will usually want to point `agent` to your own agent class so you can define custom instructions, tools, and behavior.
-
-## Example App Config
-
-```php
-<?php
-
-return [
-    'enabled' => true,
-    'title' => 'Ops Assistant',
-    'description' => 'Ask about users, workflow, or admin operations.',
-    'placeholder' => 'Ask the assistant...',
-    'agent' => App\Ai\Agents\AdminPanelAgent::class,
-    'provider' => 'gemini',
-    'model' => 'gemini-2.5-flash',
-    'max_messages' => 100,
-];
-```
 
 ## Testing
 
