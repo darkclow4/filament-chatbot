@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Laravel\Ai\Contracts\Agent;
 use Laravel\Ai\Contracts\Conversational;
+use Laravel\Ai\Streaming\Events\TextDelta;
 use Livewire\Component;
 use RuntimeException;
 use Throwable;
@@ -21,6 +22,8 @@ class FloatingChatbot extends Component
     public ?string $conversationId = null;
 
     public bool $sending = false;
+
+    public string $streamedMessage = '';
 
     public function mount(): void
     {
@@ -55,19 +58,46 @@ class FloatingChatbot extends Component
         try {
             $agent = $this->resolveAgent();
 
-            $response = $this->conversationId !== null && method_exists($agent, 'continue')
-                ? $agent->continue($this->conversationId, as: $this->getAuthenticatedUser())->prompt(
-                    $prompt,
-                    provider: $this->configuredProvider(),
-                    model: $this->configuredModel(),
-                )
-                : $agent->forUser($this->getAuthenticatedUser())->prompt(
-                    $prompt,
-                    provider: $this->configuredProvider(),
-                    model: $this->configuredModel(),
-                );
+            if ($this->isStreamingEnabled()) {
+                $response = $this->conversationId !== null && method_exists($agent, 'continue')
+                    ? $agent->continue($this->conversationId, as: $this->getAuthenticatedUser())->stream(
+                        $prompt,
+                        provider: $this->configuredProvider(),
+                        model: $this->configuredModel(),
+                    )
+                    : $agent->forUser($this->getAuthenticatedUser())->stream(
+                        $prompt,
+                        provider: $this->configuredProvider(),
+                        model: $this->configuredModel(),
+                    );
 
-            $this->conversationId = $response->conversationId;
+                $this->streamedMessage = '';
+
+                foreach ($response as $event) {
+                    if ($event instanceof TextDelta) {
+                        $this->streamedMessage .= $event->delta;
+                        $this->stream($this->formatMessageContent('assistant', $this->streamedMessage), replace: true, name: 'assistant-response');
+                    }
+                }
+
+                $this->conversationId = $response->conversationId;
+                $this->streamedMessage = '';
+            } else {
+                $response = $this->conversationId !== null && method_exists($agent, 'continue')
+                    ? $agent->continue($this->conversationId, as: $this->getAuthenticatedUser())->prompt(
+                        $prompt,
+                        provider: $this->configuredProvider(),
+                        model: $this->configuredModel(),
+                    )
+                    : $agent->forUser($this->getAuthenticatedUser())->prompt(
+                        $prompt,
+                        provider: $this->configuredProvider(),
+                        model: $this->configuredModel(),
+                    );
+
+                $this->conversationId = $response->conversationId;
+            }
+
             $this->resetErrorBag('message');
             $this->loadMessages();
         } catch (Throwable $exception) {
@@ -109,6 +139,14 @@ class FloatingChatbot extends Component
     public function isAvailable(): bool
     {
         return $this->isEnabled() && $this->hasAuthenticatedUser();
+    }
+
+    public function isStreamingEnabled(): bool
+    {
+        return ChatbotPlugin::isStreamingFor(
+            user: ChatbotPlugin::authUser(),
+            panel: ChatbotPlugin::currentPanel(),
+        );
     }
 
     public function title(): string
@@ -214,6 +252,8 @@ class FloatingChatbot extends Component
         $content ??= '';
 
         if ($role === 'assistant') {
+            $content = preg_replace('/<system-reminder>.*?<\/system-reminder>/is', '', $content) ?? $content;
+
             return (string) Str::markdown($content, [
                 'html_input' => 'strip',
                 'allow_unsafe_links' => false,
@@ -264,12 +304,13 @@ class FloatingChatbot extends Component
     }
 
     /**
-     * @return array{messages: array<int, array{id:string, role:string, content:string, html:string, created_at:mixed}>}
+     * @return array{messages: array<int, array{id:string, role:string, content:string, html:string, created_at:mixed}>, streaming: bool}
      */
     protected function payload(): array
     {
         return [
             'messages' => $this->messages,
+            'streaming' => $this->isStreamingEnabled(),
         ];
     }
 }

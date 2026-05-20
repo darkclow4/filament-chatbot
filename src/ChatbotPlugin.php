@@ -17,6 +17,8 @@ class ChatbotPlugin implements Plugin
 {
     protected static bool|string|Closure|null $enabledUsing = null;
 
+    protected static bool|string|Closure|null $streamingUsing = null;
+
     public static function make(): static
     {
         return app(static::class);
@@ -29,9 +31,21 @@ class ChatbotPlugin implements Plugin
         return $this;
     }
 
+    public function streaming(bool|string|Closure|null $condition = true): static
+    {
+        static::$streamingUsing = $condition;
+
+        return $this;
+    }
+
     public static function clearEnabledConfiguration(): void
     {
         static::$enabledUsing = null;
+    }
+
+    public static function clearStreamingConfiguration(): void
+    {
+        static::$streamingUsing = null;
     }
 
     public static function isEnabledFor(?Authenticatable $user = null, ?Panel $panel = null): bool
@@ -47,6 +61,21 @@ class ChatbotPlugin implements Plugin
         }
 
         return ($pluginEnabled ?? true) && ($configEnabled ?? true);
+    }
+
+    public static function isStreamingFor(?Authenticatable $user = null, ?Panel $panel = null): bool
+    {
+        $panel ??= static::currentPanel();
+        $user ??= static::authUser();
+
+        $pluginStreaming = static::resolveCondition(static::$streamingUsing, $user, $panel);
+        $configStreaming = static::resolveCondition(config('filament-chatbot.streaming', false), $user, $panel);
+
+        if ($pluginStreaming === false || $configStreaming === false) {
+            return false;
+        }
+
+        return ($pluginStreaming ?? false) && ($configStreaming ?? false);
     }
 
     public function getId(): string

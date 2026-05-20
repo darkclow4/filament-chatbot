@@ -36,6 +36,7 @@
                 data-empty-state-heading="{{ $this->emptyStateHeading() }}"
                 data-empty-state-description="{{ $this->emptyStateDescription() }}" data-failed-label="Failed to send"
                 data-retry-label="Retry" data-error-label="Something went wrong. Please try again."
+                data-streaming="{{ $this->isStreamingEnabled() ? 'true' : 'false' }}"
                 class="fi-chatbot-messages">
                 <div data-chatbot-messages-list>
                     @forelse ($messages as $chatMessage)
@@ -57,6 +58,17 @@
                         </div>
                     @endforelse
                 </div>
+
+                <article data-chatbot-streaming-message class="fi-chatbot-message fi-chatbot-message--assistant fi-chatbot-message--streaming"
+                    style="display: none;">
+                    <p class="fi-chatbot-message__role">Assistant</p>
+                    <div wire:stream="assistant-response" class="fi-chatbot-message__body"></div>
+                    <div class="fi-chatbot-message__streaming-indicator" aria-hidden="true">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </article>
 
                 <div data-chatbot-typing class="fi-chatbot-typing">
                     <span></span>

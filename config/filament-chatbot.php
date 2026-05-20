@@ -5,6 +5,8 @@ use Darkclow4\FilamentChatbot\Ai\Agents\FilamentChatbotAgent;
 return [
     'enabled' => true,
 
+    'streaming' => false,
+
     'title' => 'AI Assistant',
 
     'description' => 'Ask anything about this app.',

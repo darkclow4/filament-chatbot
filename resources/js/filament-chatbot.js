@@ -32,10 +32,13 @@ function wireChatbotControls() {
     const messages = root.querySelector('[data-chatbot-messages]')
     const messagesList = root.querySelector('[data-chatbot-messages-list]')
     const typing = root.querySelector('[data-chatbot-typing]')
+    const streamingMessage = root.querySelector('[data-chatbot-streaming-message]')
 
-    if (! launcher || ! closeButton || ! newChatButton || ! textarea || ! panel || ! messages || ! messagesList || ! typing) {
+    if (! launcher || ! closeButton || ! newChatButton || ! textarea || ! panel || ! messages || ! messagesList || ! typing || ! streamingMessage) {
         return
     }
+
+    let streamingEnabled = messages.dataset.streaming === 'true'
 
     let togglePanel = (open) => {
         panel.style.display = open ? '' : 'none'
@@ -52,7 +55,8 @@ function wireChatbotControls() {
 
     let setProcessing = (isProcessing) => {
         textarea.disabled = isProcessing
-        typing.style.display = isProcessing ? 'flex' : 'none'
+        typing.style.display = isProcessing && !streamingEnabled ? 'flex' : 'none'
+        streamingMessage.style.display = isProcessing && streamingEnabled ? '' : 'none'
 
         if (isProcessing) {
             requestAnimationFrame(() => {
@@ -80,6 +84,12 @@ function wireChatbotControls() {
                     <p class="fi-chatbot-empty-state__description">${escapeHtml(emptyStateDescription)}</p>
                 </div>
             `
+
+            let streamingBody = streamingMessage.querySelector('.fi-chatbot-message__body')
+
+            if (streamingBody) {
+                streamingBody.innerHTML = ''
+            }
 
             return
         }
@@ -135,24 +145,6 @@ function wireChatbotControls() {
             <button type="button" class="fi-chatbot-message__retry">${escapeHtml(retryLabel)}</button>
         `
 
-        meta.querySelector('.fi-chatbot-message__retry')?.addEventListener('click', async () => {
-            if (textarea.disabled) {
-                return
-            }
-
-            message.remove()
-            let retryId = appendUserMessage(prompt)
-
-            requestAnimationFrame(() => {
-                messages.scrollTop = messages.scrollHeight
-            })
-
-            try {
-                await callChatbot('sendPrompt', [prompt])
-            } catch (error) {
-                markMessageFailed(retryId, prompt)
-            }
-        }, { once: true })
     }
 
     let callChatbot = async (method, params = []) => {
@@ -176,6 +168,7 @@ function wireChatbotControls() {
             let response = await wire.call(method, ...params)
 
             if (response && typeof response === 'object') {
+                streamingEnabled = response.streaming === true
                 renderMessages(response.messages ?? [])
             }
 
@@ -191,6 +184,7 @@ function wireChatbotControls() {
             let response = await wire.$call(method, ...params)
 
             if (response && typeof response === 'object') {
+                streamingEnabled = response.streaming === true
                 renderMessages(response.messages ?? [])
             }
 
@@ -218,6 +212,12 @@ function wireChatbotControls() {
     newChatButton.onclick = async () => {
         await callChatbot('startNewConversation')
         textarea.value = ''
+
+        let streamingBody = streamingMessage.querySelector('.fi-chatbot-message__body')
+
+        if (streamingBody) {
+            streamingBody.innerHTML = ''
+        }
     }
 
     textarea.onkeydown = async (event) => {
@@ -239,6 +239,12 @@ function wireChatbotControls() {
 
         textarea.value = ''
         let optimisticId = appendUserMessage(prompt)
+        let streamingBody = streamingMessage.querySelector('.fi-chatbot-message__body')
+
+        if (streamingBody) {
+            streamingBody.innerHTML = ''
+        }
+
         requestAnimationFrame(() => {
             messages.scrollTop = messages.scrollHeight
         })
@@ -249,6 +255,44 @@ function wireChatbotControls() {
             markMessageFailed(optimisticId, prompt)
         }
     }
+
+    root.addEventListener('click', async (event) => {
+        let retryButton = event.target.closest('.fi-chatbot-message__retry')
+
+        if (!retryButton || textarea.disabled) {
+            return
+        }
+
+        let message = retryButton.closest('[data-chatbot-pending-id]')
+
+        if (!message) {
+            return
+        }
+
+        let prompt = message.querySelector('.fi-chatbot-message__body')?.textContent?.trim() ?? ''
+
+        if (!prompt.length) {
+            return
+        }
+
+        message.remove()
+        let retryId = appendUserMessage(prompt)
+        let streamingBody = streamingMessage.querySelector('.fi-chatbot-message__body')
+
+        if (streamingBody) {
+            streamingBody.innerHTML = ''
+        }
+
+        requestAnimationFrame(() => {
+            messages.scrollTop = messages.scrollHeight
+        })
+
+        try {
+            await callChatbot('sendPrompt', [prompt])
+        } catch (error) {
+            markMessageFailed(retryId, prompt)
+        }
+    })
 
     togglePanel(false)
     setProcessing(false)
