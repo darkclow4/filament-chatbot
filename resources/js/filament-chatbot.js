@@ -39,11 +39,31 @@ function wireChatbotControls() {
     }
 
     let streamingEnabled = messages.dataset.streaming === 'true'
+    let panelHideTimeout = null
 
     let togglePanel = (open) => {
-        panel.style.display = open ? '' : 'none'
         launcher.setAttribute('aria-expanded', open ? 'true' : 'false')
-        launcher.style.display = open ? 'none' : ''
+
+        if (panelHideTimeout) {
+            window.clearTimeout(panelHideTimeout)
+            panelHideTimeout = null
+        }
+
+        if (open) {
+            launcher.classList.add('fi-chatbot-launcher--hidden')
+            panel.style.display = ''
+
+            requestAnimationFrame(() => {
+                panel.classList.add('fi-chatbot-panel--visible')
+            })
+        } else {
+            panel.classList.remove('fi-chatbot-panel--visible')
+
+            panelHideTimeout = window.setTimeout(() => {
+                panel.style.display = 'none'
+                launcher.classList.remove('fi-chatbot-launcher--hidden')
+            }, 180)
+        }
 
         if (open) {
             requestAnimationFrame(() => {
