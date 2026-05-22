@@ -6,8 +6,6 @@ use Closure;
 use Filament\Contracts\Plugin;
 use Filament\Facades\Filament;
 use Filament\Panel;
-use Filament\Support\Assets\Css;
-use Filament\Support\Assets\Js;
 use Filament\View\PanelsRenderHook;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Arr;
@@ -98,10 +96,6 @@ class ChatbotPlugin implements Plugin
     public function register(Panel $panel): void
     {
         $panel
-            ->assets([
-                Css::make('filament-chatbot-styles', __DIR__.'/../resources/dist/filament-chatbot.min.css'),
-                Js::make('filament-chatbot-scripts', __DIR__.'/../resources/dist/filament-chatbot.min.js'),
-            ])
             ->renderHook(
                 PanelsRenderHook::BODY_START,
                 fn (): string => Blade::render(
