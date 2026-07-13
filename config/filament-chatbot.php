@@ -7,6 +7,8 @@ return [
 
     'streaming' => false,
 
+    'draggable' => false,
+
     'title' => 'AI Assistant',
 
     'description' => 'Ask anything about this app.',

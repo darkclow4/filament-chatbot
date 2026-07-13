@@ -149,6 +149,14 @@ class FloatingChatbot extends Component
         );
     }
 
+    public function isDraggable(): bool
+    {
+        return ChatbotPlugin::isDraggableFor(
+            user: ChatbotPlugin::authUser(),
+            panel: ChatbotPlugin::currentPanel(),
+        );
+    }
+
     public function title(): string
     {
         return (string) config('filament-chatbot.title', 'AI Assistant');

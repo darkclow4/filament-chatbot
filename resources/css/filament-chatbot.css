@@ -30,7 +30,19 @@
     padding: 0.72rem;
     box-shadow: 0 12px 28px var(--filament-chatbot-primary-shadow);
     cursor: pointer;
+    touch-action: manipulation;
+    user-select: none;
     transition: padding 180ms ease, gap 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+}
+
+.fi-chatbot--draggable .fi-chatbot-launcher {
+    cursor: grab;
+    touch-action: none;
+}
+
+.fi-chatbot--draggable .fi-chatbot-launcher--dragging {
+    cursor: grabbing;
+    transition: none;
 }
 
 .fi-chatbot-launcher:hover,
@@ -82,7 +94,29 @@
     transform: translateX(0);
 }
 
+.fi-chatbot-launcher--expand-left:hover,
+.fi-chatbot-launcher--expand-left:focus-visible {
+    transform: translateX(calc(-100% + var(--fi-chatbot-launcher-collapsed-width)));
+}
+
+.fi-chatbot-launcher--dragging:hover,
+.fi-chatbot-launcher--dragging:focus-visible {
+    gap: 0;
+    padding: 0.72rem;
+    transform: none;
+}
+
+.fi-chatbot-launcher--dragging:hover .fi-chatbot-launcher__label,
+.fi-chatbot-launcher--dragging:focus-visible .fi-chatbot-launcher__label {
+    max-width: 0;
+    opacity: 0;
+    transform: translateX(-0.2rem);
+}
+
 .fi-chatbot-panel {
+    position: fixed;
+    right: 1.5rem;
+    bottom: 1.5rem;
     width: min(26rem, calc(100vw - 1.5rem));
     overflow: hidden;
     border: 1px solid color-mix(in srgb, var(--filament-chatbot-primary) 24%, transparent);
@@ -647,7 +681,10 @@
     }
 
     .fi-chatbot-panel {
-        width: 100%;
+        right: 1rem;
+        bottom: 1rem;
+        left: 1rem;
+        width: auto;
     }
 
     .fi-chatbot-launcher {

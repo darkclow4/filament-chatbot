@@ -19,6 +19,8 @@ class ChatbotPlugin implements Plugin
 
     protected static string|Closure|null $primaryColorUsing = null;
 
+    protected static bool|string|Closure|null $draggableUsing = null;
+
     public static function make(): static
     {
         return app(static::class);
@@ -45,6 +47,13 @@ class ChatbotPlugin implements Plugin
         return $this;
     }
 
+    public function draggable(bool|string|Closure|null $condition = true): static
+    {
+        static::$draggableUsing = $condition;
+
+        return $this;
+    }
+
     public static function clearEnabledConfiguration(): void
     {
         static::$enabledUsing = null;
@@ -58,6 +67,11 @@ class ChatbotPlugin implements Plugin
     public static function clearPrimaryColorConfiguration(): void
     {
         static::$primaryColorUsing = null;
+    }
+
+    public static function clearDraggableConfiguration(): void
+    {
+        static::$draggableUsing = null;
     }
 
     public static function isEnabledFor(?Authenticatable $user = null, ?Panel $panel = null): bool
@@ -86,6 +100,20 @@ class ChatbotPlugin implements Plugin
         }
 
         return static::resolveCondition(config('filament-chatbot.streaming', false), $user, $panel) ?? false;
+    }
+
+    public static function isDraggableFor(?Authenticatable $user = null, ?Panel $panel = null): bool
+    {
+        $panel ??= static::currentPanel();
+        $user ??= static::authUser();
+
+        $pluginDraggable = static::resolveCondition(static::$draggableUsing, $user, $panel);
+
+        if ($pluginDraggable !== null) {
+            return $pluginDraggable;
+        }
+
+        return static::resolveCondition(config('filament-chatbot.draggable', false), $user, $panel) ?? false;
     }
 
     public function getId(): string

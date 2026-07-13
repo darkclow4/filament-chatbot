@@ -25,6 +25,7 @@ function wireChatbotControls() {
     }
 
     const launcher = root.querySelector('[data-chatbot-launcher]')
+    const chatbot = root.querySelector('.fi-chatbot')
     const closeButton = root.querySelector('[data-chatbot-close]')
     const newChatButton = root.querySelector('[data-chatbot-new-chat]')
     const textarea = root.querySelector('[data-chatbot-textarea]')
@@ -34,12 +35,83 @@ function wireChatbotControls() {
     const typing = root.querySelector('[data-chatbot-typing]')
     const streamingMessage = root.querySelector('[data-chatbot-streaming-message]')
 
-    if (! launcher || ! closeButton || ! newChatButton || ! textarea || ! panel || ! messages || ! messagesList || ! typing || ! streamingMessage) {
+    if (! chatbot || ! launcher || ! closeButton || ! newChatButton || ! textarea || ! panel || ! messages || ! messagesList || ! typing || ! streamingMessage) {
         return
     }
 
     let streamingEnabled = messages.dataset.streaming === 'true'
+    let draggable = chatbot.dataset.chatbotDraggable === 'true'
     let panelHideTimeout = null
+    let dragged = false
+
+    let applyLauncherPosition = (clientX, clientY) => {
+        let bounds = launcher.getBoundingClientRect()
+        let spacing = 8
+        let left = Math.min(Math.max(clientX - (bounds.width / 2), spacing), window.innerWidth - bounds.width - spacing)
+        let top = Math.min(Math.max(clientY - (bounds.height / 2), spacing), window.innerHeight - bounds.height - spacing)
+
+        let expandLeft = left + bounds.width + 120 > window.innerWidth - spacing
+
+        chatbot.style.inset = `${top}px auto auto ${left}px`
+        chatbot.style.alignItems = 'flex-start'
+        launcher.classList.toggle('fi-chatbot-launcher--expand-left', expandLeft)
+        launcher.style.setProperty('--fi-chatbot-launcher-collapsed-width', `${bounds.width}px`)
+
+        if (expandLeft) {
+            launcher.style.transform = `translateX(calc(-100% + ${bounds.width}px))`
+        } else {
+            launcher.style.transform = ''
+        }
+    }
+
+    if (draggable) {
+        chatbot.classList.add('fi-chatbot--draggable')
+
+        launcher.addEventListener('pointerdown', (event) => {
+            if (event.button !== 0) {
+                return
+            }
+
+            let startX = event.clientX
+            let startY = event.clientY
+            let pointerId = event.pointerId
+
+            launcher.setPointerCapture(pointerId)
+
+            let moveLauncher = (moveEvent) => {
+                if (moveEvent.pointerId !== pointerId) {
+                    return
+                }
+
+                if (! dragged && Math.hypot(moveEvent.clientX - startX, moveEvent.clientY - startY) < 5) {
+                    return
+                }
+
+                dragged = true
+                launcher.classList.add('fi-chatbot-launcher--dragging')
+                applyLauncherPosition(moveEvent.clientX, moveEvent.clientY)
+            }
+
+            let stopDragging = (upEvent) => {
+                if (upEvent.pointerId !== pointerId) {
+                    return
+                }
+
+                launcher.removeEventListener('pointermove', moveLauncher)
+                launcher.removeEventListener('pointerup', stopDragging)
+                launcher.removeEventListener('pointercancel', stopDragging)
+                launcher.classList.remove('fi-chatbot-launcher--dragging')
+
+                if (launcher.hasPointerCapture(pointerId)) {
+                    launcher.releasePointerCapture(pointerId)
+                }
+            }
+
+            launcher.addEventListener('pointermove', moveLauncher)
+            launcher.addEventListener('pointerup', stopDragging)
+            launcher.addEventListener('pointercancel', stopDragging)
+        })
+    }
 
     let togglePanel = (open) => {
         launcher.setAttribute('aria-expanded', open ? 'true' : 'false')
@@ -208,6 +280,12 @@ function wireChatbotControls() {
     }
 
     launcher.onclick = () => {
+        if (dragged) {
+            dragged = false
+
+            return
+        }
+
         let isOpen = panel.style.display !== 'none'
 
         togglePanel(! isOpen)

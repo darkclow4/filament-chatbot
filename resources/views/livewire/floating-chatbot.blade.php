@@ -1,6 +1,6 @@
 <div>
     @if ($this->isAvailable())
-        <div wire:key="filament-chatbot-floating" class="fi-chatbot">
+        <div wire:key="filament-chatbot-floating" class="fi-chatbot" data-chatbot-draggable="{{ $this->isDraggable() ? 'true' : 'false' }}">
         <button type="button" data-chatbot-launcher class="fi-chatbot-launcher" aria-controls="filament-chatbot-panel"
             aria-expanded="false">
             <span class="fi-chatbot-launcher__icon" aria-hidden="true">
