@@ -12,6 +12,7 @@ It mounts a global Livewire chat widget inside your Filament panel, stores conve
 - Database-backed remembered conversations
 - Configurable `agent` class via config
 - Optional provider and model overrides
+- Optional draggable trigger button
 
 ## Requirements
 
@@ -90,7 +91,7 @@ The current plugin implementation mounts the floating chatbot through `PanelsRen
 
 ## Plugin API
 
-The plugin exposes fluent methods so you can control visibility, streaming mode, and the chatbot accent color directly from your panel provider.
+The plugin exposes fluent methods so you can control visibility, streaming mode, drag behavior, and the chatbot accent color directly from your panel provider.
 
 ```php
 use Darkclow4\FilamentChatbot\ChatbotPlugin;
@@ -99,6 +100,7 @@ use Darkclow4\FilamentChatbot\ChatbotPlugin;
     ChatbotPlugin::make()
         ->enabled(fn ($user) => $user?->hasRole('admin') ?? false)
         ->streaming(true)
+        ->draggable(true)
         ->primaryColor('#10b981')
 )
 ```
@@ -121,6 +123,15 @@ Use `streaming()` to enable direct AI streaming without Reverb / broadcast.
 ```php
 ChatbotPlugin::make()
     ->streaming(true)
+```
+
+### `draggable()`
+
+Use `draggable()` to let users reposition the chatbot launcher anywhere inside the panel viewport.
+
+```php
+ChatbotPlugin::make()
+    ->draggable(true)
 ```
 
 ### `primaryColor()`
@@ -149,6 +160,7 @@ The published config file looks like this:
 return [
     'enabled' => true,
     'streaming' => false,
+    'draggable' => false,
     'title' => 'AI Assistant',
     'description' => 'Ask anything about this app.',
     'placeholder' => 'Type your message...',
@@ -163,9 +175,9 @@ return [
 ];
 ```
 
-### Enabled And Streaming Precedence
+### Configuration Precedence
 
-Plugin API values take priority over config values.
+Plugin API values take priority over config values for `enabled`, `streaming`, and `draggable`.
 
 Resolution order:
 
